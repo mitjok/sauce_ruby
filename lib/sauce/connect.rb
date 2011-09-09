@@ -8,20 +8,19 @@ module Sauce
       @ready = false
       @status = "uninitialized"
       @error = nil
-      host = options[:host] || '127.0.0.1'
-      port = options[:port] || '3000'
-      tunnel_port = options[:tunnel_port] || '80'
-      options.delete(:host)
-      options.delete(:port)
-      options.delete(:tunnel_port)
       config = Sauce::Config.new(options)
+      host = options.delete(:host) || '127.0.0.1'
+      ports = options.delete(:port) || '3000'
+      ports = ports.join(' -p ') if ports.is_a?(Array)
+      tunnel_ports = options.delete(:tunnel_port) || '80'
+      tunnel_ports = tunnel_ports.join(' -t ') if tunnel_ports.is_a?(Array)
       if config.username.nil?
         raise ArgumentError, "Username required to launch Sauce Connect. Please set the environment variable $SAUCE_USERNAME"
       end
       if config.access_key.nil?
         raise ArgumentError, "Access key required to launch Sauce Connect. Please set the environment variable $SAUCE_ACCESS_KEY"
       end
-      args = ['-u', config.username, '-k', config.access_key, '-s', host, '-p', port, '-d', config.domain, '-t', tunnel_port]
+      args = ['-u', config.username, '-k', config.access_key, '-s', host, '-p', ports, '-d', config.domain, '-t', tunnel_ports, '--debug-ssh', !!options[:debug_ssh] ]
       @pipe = IO.popen((["exec", "\"#{Sauce::Connect.find_sauce_connect}\""] + args + ["2>&1"]).join(' '))
       @process_status = $?
       at_exit do

@@ -9,12 +9,14 @@ module Sauce
       def browser
         unless @browser
           puts "[Connecting to Sauce OnDemand...]"
-          config = Sauce::Config.new
+          config = Sauce.get_config
           @domain = "#{rand(10000)}.test"
-          @sauce_tunnel = Sauce::Connect.new(:host => $uri.host || rack_server.host,
-                                             :port => $uri.port || rack_server.port,
-                                             :domain => $uri.host || @domain,
-                                             :quiet => true)
+          @sauce_tunnel = Sauce::Connect.new(:host => config.application_host || $uri.host || rack_server.host,
+                                             :port => config.application_port || $uri.port || rack_server.port,
+                                             :domain => config.application_host || $uri.host || @domain,
+                                             :tunnel_port => config.tunnel_port,
+                                             :debug_ssh => config.debug_ssh || false,
+                                             :quiet => config.quiet_connect)
           @sauce_tunnel.wait_until_ready
           @browser = Sauce::Selenium2.new(:name => "Capybara test.",
                                           :browser_url => "http://#{$uri.host || @domain}")
